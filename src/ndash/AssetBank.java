@@ -4,30 +4,64 @@ import n2d.Atlas;
 import javax.microedition.lcdui.Image;
 
 /**
- * Shared decoded assets: Menu and DashGame draw from the same Atlas
- * and font maps instead of loading duplicates (the old double-load
- * blew the 6300 heap on level launch). Level bg stays per-game.
+ * Lazy per-screen assets: the menu set (128x256 sheet + font16 + logo)
+ * and the game set (256x512 sheet + fonts + bg) are never resident at
+ * the same time. Switching screens frees the old set first, then loads
+ * the new one, so peak heap stays far below the 6300 ceiling.
  */
 public final class AssetBank {
 
-    public static Atlas atlas;
+    public static Atlas menuAtlas;
+    public static Atlas gameAtlas;
     public static BitmapFont fnt16;
-    public static BitmapFont fnt24;
     public static Image logo;
-    public static boolean ready;
+    public static Image bg;
 
-    public static boolean boot() {
-        if (ready) return true;
-        try {
-            atlas = Atlas.load("/atlas.png", "/atlas.tbl");
-            fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");
-            fnt24 = BitmapFont.load("/font24.png", "/font24.tbl");
-            logo = Image.createImage("/logo.png");
-            Kit.refresh(atlas);
-            ready = true;
+    public static boolean bootMenu() {
+        freeGame();
+        if (menuAtlas != null) {
+            Kit.refreshPrev(menuAtlas);
             return true;
-        } catch (Exception e) {
+        }
+        try {
+            menuAtlas = Atlas.load("/atlas_menu.png", "/atlas_menu.tbl");
+            if (fnt16 == null) {
+                fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");
+            }
+            if (logo == null) logo = Image.createImage("/logo.png");
+            Kit.refreshPrev(menuAtlas);
+            return true;
+        } catch (Throwable t) {
             return false;
         }
+    }
+
+    public static boolean bootGame(int level) {
+        freeMenu();
+        try {
+            if (gameAtlas == null) {
+                gameAtlas = Atlas.load("/atlas_game.png", "/atlas_game.tbl");
+            }
+            if (fnt16 == null) {
+                fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");
+            }
+            bg = Image.createImage("/bg" + level + ".png");
+            Kit.refreshFull(gameAtlas);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    public static void freeMenu() {
+        menuAtlas = null;
+        logo = null;
+        System.gc();
+    }
+
+    public static void freeGame() {
+        gameAtlas = null;
+        bg = null;
+        System.gc();
     }
 }

@@ -14,7 +14,6 @@ public final class Menu extends Canvas {
     private Atlas atlas;
     private Image logo;
     private BitmapFont fnt16;
-    private BitmapFont fnt24;
     private int sel;
     private int rFace0, rFace1, rFace2;
     private boolean ready;
@@ -27,27 +26,37 @@ public final class Menu extends Canvas {
     }
 
     public boolean boot() {
-        try {
-            Save.load();
-            if (!AssetBank.boot()) return false;
-            atlas = AssetBank.atlas;
-            logo = AssetBank.logo;
-            fnt16 = AssetBank.fnt16;
-            fnt24 = AssetBank.fnt24;
+        Save.load();
+        if (!AssetBank.bootMenu()) return false;
+        syncBank();
+        ready = true;
+        repaint();
+        return true;
+    }
+
+    private void syncBank() {
+        atlas = AssetBank.menuAtlas;
+        logo = AssetBank.logo;
+        fnt16 = AssetBank.fnt16;
+        if (atlas != null) {
             rFace0 = atlas.find("face0");
             rFace1 = atlas.find("face1");
             rFace2 = atlas.find("face2");
-            Kit.refresh(atlas);
-            ready = true;
-            return true;
-        } catch (Exception e) {
-            return false;
         }
+    }
+
+    /** Return here from the game: reload the menu set, then show. */
+    public void show() {
+        AssetBank.bootMenu();
+        syncBank();
+        customizing = false;
+        Save.load();
+        display.setCurrent(this);
     }
 
     public void refresh() {
         Save.load();
-        if (ready) Kit.refresh(atlas);
+        if (ready) Kit.refreshPrev(AssetBank.menuAtlas);
         repaint();
     }
 
@@ -89,7 +98,7 @@ public final class Menu extends Canvas {
                 else if (crow == 1) Kit.ship = (Kit.ship - 1 + d + 4) % 4 + 1;
                 else if (crow == 2) Kit.wave = (Kit.wave - 1 + d + 4) % 4 + 1;
                 else Kit.color = (Kit.color + d + 8) % 8;
-                Kit.refresh(atlas);
+                Kit.refreshPrev(AssetBank.menuAtlas);
                 Save.store();
                 Sfx.click();
                 repaint();
@@ -129,10 +138,16 @@ public final class Menu extends Canvas {
     }
 
     private void launch(int idx) {
+        if (!AssetBank.bootGame(idx)) {
+            AssetBank.bootMenu();
+            syncBank();
+            repaint();
+            return;
+        }
         DashGame g = new DashGame(display, this, idx);
         display.setCurrent(g);
         if (g.boot()) g.start();
-        else display.setCurrent(this);
+        else show();
     }
 
     protected void paint(Graphics g) {
@@ -165,21 +180,21 @@ public final class Menu extends Canvas {
                 fnt16.draw(g, "icons + color", 64, y + 22, 0);
             }
         }
-        fnt16.draw(g, "2/8 move 5 play 0 sound", 120, 300, 1);
+        fnt16.draw(g, "v0.3.2 2/8 move 5 play", 120, 300, 1);
     }
 
     private void paintKit(Graphics g) {
-        fnt24.draw(g, "KUSTOMIZE", 120, 26, 1);
+        fnt16.draw(g, "KUSTOMIZE", 120, 28, 1);
         // preview of the focused row's item, tinted live
-        Image img = Kit.cubeFrame(0);
+        Image img = Kit.prevCube();
         int iw = 36;
         int ih = 36;
         if (crow == 1) {
-            img = Kit.shipFrame(2);
+            img = Kit.prevShip();
             iw = 38;
             ih = 22;
         } else if (crow == 2) {
-            img = Kit.waveFrame(0);
+            img = Kit.prevWave();
             iw = 34;
             ih = 26;
         }

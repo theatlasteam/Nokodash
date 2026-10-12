@@ -18,7 +18,7 @@ CHARSET_FULL = ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
                 "0123456789%:.,!?-+x/()\"'<>=* ")
 CHARSET_BIG = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%!?.,-+/:x() "
 
-SIZES = [(16, "font16", CHARSET_FULL), (24, "font24", CHARSET_BIG)]
+SIZES = [(16, "font16", CHARSET_FULL)]
 CAP = 78  # source cap/base height in gjFont00
 
 

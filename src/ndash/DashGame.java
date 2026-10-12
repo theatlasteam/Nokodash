@@ -29,7 +29,6 @@ public final class DashGame extends Game {
     private static final int WIN = 2;
     private static final int JMASK = GameCanvas.UP_PRESSED | GameCanvas.FIRE_PRESSED;
 
-    private final Display display;
     private final Menu menu;
     private final int levelIdx;
     private Levels.Def lv;
@@ -40,7 +39,6 @@ public final class DashGame extends Game {
     private Particles parts;
     private Trail trail;
     private BitmapFont fnt16;
-    private BitmapFont fnt24;
 
     private int mode = CUBE;
     private int state = PLAY;
@@ -67,7 +65,6 @@ public final class DashGame extends Game {
     private boolean ready;
 
     public DashGame(Display display, Menu menu, int levelIdx) {
-        this.display = display;
         this.menu = menu;
         this.levelIdx = levelIdx;
     }
@@ -75,14 +72,10 @@ public final class DashGame extends Game {
     public boolean boot() {
         try {
             lv = Levels.get(levelIdx);
-            if (!AssetBank.boot()) return false;
-            atlas = AssetBank.atlas;
+            atlas = AssetBank.gameAtlas;
             fnt16 = AssetBank.fnt16;
-            fnt24 = AssetBank.fnt24;
-            bg = Image.createImage("/bg" + levelIdx + ".png");
-            Kit.refresh(atlas);
-            fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");
-            fnt24 = BitmapFont.load("/font24.png", "/font24.tbl");
+            bg = AssetBank.bg;
+            Kit.refreshFull(atlas);
             rBlock = atlas.find("block");
             rSlab = atlas.find("slab");
             rSpike = atlas.find("spike");
@@ -134,12 +127,12 @@ public final class DashGame extends Game {
         }
         if (keyCode == KEY_STAR) {
             stop();
-            display.setCurrent(menu);
+            menu.show();
             return;
         }
         if (state == WIN) {
             stop();
-            display.setCurrent(menu);
+            menu.show();
             return;
         }
         if (keyCode == KEY_NUM2 || keyCode == KEY_NUM5 || gameAct(keyCode) == FIRE) {
@@ -486,7 +479,7 @@ public final class DashGame extends Game {
             g.fillRect(px, py2, pw, ph);
             g.setColor(0x50dcff);
             g.drawRect(px, py2, pw - 1, ph - 1);
-            fnt24.draw(g, "COMPLETE!", 120, py2 + 8, 1);
+            fnt16.draw(g, "COMPLETE!", 120, py2 + 10, 1);
             fnt16.draw(g, lv.name.toUpperCase(), 120, py2 + 44, 1);
             fnt16.draw(g, "jumps " + jumps + " tries " + attempts, 120, py2 + 64, 1);
             fnt16.draw(g, "best " + Save.best[levelIdx] + "%", 120, py2 + 82, 1);

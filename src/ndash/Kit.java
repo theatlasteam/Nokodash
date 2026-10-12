@@ -22,10 +22,15 @@ public final class Kit {
     public static int color;
 
     private static Image[] cache = new Image[15];
+    private static Image[] prev = new Image[3];
     private static int cachedCube;
     private static int cachedShip;
     private static int cachedWave;
     private static int cachedColor = -1;
+    private static int prevCube;
+    private static int prevShip;
+    private static int prevWave;
+    private static int prevColor = -1;
 
     public static int primary() {
         return COLORS[color & 7];
@@ -61,6 +66,11 @@ public final class Kit {
 
     /** Rebuild the tinted cache if selection changed. Call on show/boot. */
     public static void refresh(Atlas atlas) {
+        refreshFull(atlas);
+    }
+
+    /** Full 15-frame cache from the game atlas. */
+    public static void refreshFull(Atlas atlas) {
         if (cachedColor == (color & 7) && cachedCube == cube
                 && cachedShip == ship && cachedWave == wave
                 && cache[0] != null) return;
@@ -80,6 +90,21 @@ public final class Kit {
         cachedColor = color & 7;
     }
 
+    /** 3-frame preview cache from the menu atlas (customizer). */
+    public static void refreshPrev(Atlas atlas) {
+        if (prevColor == (color & 7) && prevCube == cube
+                && prevShip == ship && prevWave == wave
+                && prev[0] != null) return;
+        int col = primary();
+        prev[0] = tint(region(atlas, "cb" + cube + "_0"), col);
+        prev[1] = tint(region(atlas, "sh" + ship + "_2"), col);
+        prev[2] = tint(region(atlas, "wv" + wave + "_0"), col);
+        prevCube = cube;
+        prevShip = ship;
+        prevWave = wave;
+        prevColor = color & 7;
+    }
+
     public static Image cubeFrame(int r) {
         return cache[r & 7];
     }
@@ -92,5 +117,17 @@ public final class Kit {
 
     public static Image waveFrame(int up) {
         return cache[13 + (up != 0 ? 1 : 0)];
+    }
+
+    public static Image prevCube() {
+        return prev[0];
+    }
+
+    public static Image prevShip() {
+        return prev[1];
+    }
+
+    public static Image prevWave() {
+        return prev[2];
     }
 }

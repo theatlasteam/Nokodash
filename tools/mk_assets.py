@@ -144,21 +144,45 @@ LEVEL_STYLE = [((40, 60, 140), (90, 220, 255)),
 for i, (tint, edge) in enumerate(LEVEL_STYLE):
     sprites["ground%d" % i] = (ground(gsq, tint, edge), (0, 0))
 
-# pack (shelf, POT)
+# pack (shelf, POT) into per-screen sheets so each screen loads only
+# what it needs: menu sheet (faces + kit preview frames) vs game sheet.
 PAD = 1
-items = sorted(sprites.items(), key=lambda kv: -kv[1][0].size[1])
-WIDTH = 256
-x = y = row_h = 0
-place = []
-for sid, (im, anchor) in items:
-    w, h = im.size
-    if x + w + PAD > WIDTH:
-        x = 0
-        y += row_h + PAD
-        row_h = 0
-    place.append((sid, im, anchor, x + PAD, y + PAD))
-    x += w + PAD * 2
-    row_h = max(row_h, h)
+
+MENU_IDS = set(["face0", "face1", "face2", "face3"])
+for v in range(1, 5):
+    MENU_IDS.add("cb%d_0" % v)
+    MENU_IDS.add("sh%d_2" % v)
+    MENU_IDS.add("wv%d_0" % v)
+
+
+def pack(sub, width, name):
+    items = sorted(sub.items(), key=lambda kv: -kv[1][0].size[1])
+    x = y = row_h = 0
+    place = []
+    for sid, (im, anchor) in items:
+        w, h = im.size
+        if x + w + PAD > width:
+            x = 0
+            y += row_h + PAD
+            row_h = 0
+        place.append((sid, im, anchor, x + PAD, y + PAD))
+        x += w + PAD * 2
+        row_h = max(row_h, h)
+    HEIGHT = pot(y + row_h + PAD * 2)
+    assert HEIGHT <= 512, (name, HEIGHT)
+    sheet = Image.new("RGBA", (width, HEIGHT), (0, 0, 0, 0))
+    lines = ["N2ATLAS 1", "sheet %d %d" % (width, HEIGHT)]
+    for sid, im, anchor, px, py in place:
+        sheet.alpha_composite(im, (px, py))
+        w, h = im.size
+        lines.append("s %s %d %d %d %d %d %d" % (sid, px, py, w, h, anchor[0], anchor[1]))
+    sheet.save(os.path.join(ASSETS, name + ".png"), optimize=True)
+    open(os.path.join(ASSETS, name + ".tbl"), "w").write("\n".join(lines) + "\n")
+    print("%s %dx%d, %d sprites" % (name, width, HEIGHT, len(place)))
+
+
+menu_sprites = dict((k, v) for k, v in sprites.items() if k in MENU_IDS)
+game_sprites = dict(sprites)
 
 
 def pot(v):
@@ -168,17 +192,8 @@ def pot(v):
     return p
 
 
-HEIGHT = pot(y + row_h + PAD * 2)
-assert HEIGHT <= 512, HEIGHT
-sheet = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-lines = ["N2ATLAS 1", "sheet %d %d" % (WIDTH, HEIGHT)]
-for sid, im, anchor, px, py in place:
-    sheet.alpha_composite(im, (px, py))
-    w, h = im.size
-    lines.append("s %s %d %d %d %d %d %d" % (sid, px, py, w, h, anchor[0], anchor[1]))
-sheet.save(os.path.join(ASSETS, "atlas.png"), optimize=True)
-open(os.path.join(ASSETS, "atlas.tbl"), "w").write("\n".join(lines) + "\n")
-print("atlas %dx%d, %d sprites" % (WIDTH, HEIGHT, len(place)))
+pack(menu_sprites, 128, "atlas_menu")
+pack(game_sprites, 256, "atlas_game")
 
 # per-level backgrounds: gradient + perspective grid + glow sun
 BG_STYLE = [((8, 10, 40), (40, 30, 90), (90, 220, 255)),
