@@ -21,8 +21,8 @@ public final class Kit {
     public static int wave = 1;
     public static int color;
 
-    private static Image[] cache = new Image[15];
-    private static Image[] prev = new Image[3];
+    private static Image[] cache = new Image[19];
+    private static Image[] prev = new Image[4];
     private static int cachedCube;
     private static int cachedShip;
     private static int cachedWave;
@@ -84,6 +84,9 @@ public final class Kit {
         for (int i = 0; i < 2; i++) {
             cache[13 + i] = tint(region(atlas, "wv" + wave + "_" + i), col);
         }
+        for (int i = 1; i <= 4; i++) {
+            cache[14 + i] = tint(region(atlas, "cbm" + i), col);
+        }
         cachedCube = cube;
         cachedShip = ship;
         cachedWave = wave;
@@ -99,6 +102,7 @@ public final class Kit {
         prev[0] = tint(region(atlas, "cb" + cube + "_0"), col);
         prev[1] = tint(region(atlas, "sh" + ship + "_2"), col);
         prev[2] = tint(region(atlas, "wv" + wave + "_0"), col);
+        prev[3] = tint(region(atlas, "cbm" + cube), col);
         prevCube = cube;
         prevShip = ship;
         prevWave = wave;
@@ -129,5 +133,15 @@ public final class Kit {
 
     public static Image prevWave() {
         return prev[2];
+    }
+
+    public static Image cargoFrame(int v) {
+        if (v < 1) v = 1;
+        if (v > 4) v = 4;
+        return cache[14 + v];
+    }
+
+    public static Image prevCargo() {
+        return prev[3];
     }
 }

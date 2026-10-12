@@ -8,11 +8,11 @@ java -jar ../lib/proguard.jar -injars build/classes -outjars build/preverified -
 python3 - <<'PY'
 from pathlib import Path
 import zipfile
-fields=['MIDlet-Name: Nokodash','MIDlet-Version: 0.3.3','MIDlet-Vendor: Atlas','MIDlet-1: Nokodash,/icon.png,ndash.Dash','MicroEdition-Configuration: CLDC-1.1','MicroEdition-Profile: MIDP-2.0']
+fields=['MIDlet-Name: Nokodash','MIDlet-Version: 0.3.4','MIDlet-Vendor: Atlas','MIDlet-1: Nokodash,/icon.png,ndash.Dash','MicroEdition-Configuration: CLDC-1.1','MicroEdition-Profile: MIDP-2.0']
 jar=Path('dist/Nokodash.jar')
 with zipfile.ZipFile(jar,'w',zipfile.ZIP_DEFLATED) as z:
  z.writestr('META-INF/MANIFEST.MF','\r\n'.join(['Manifest-Version: 1.0']+fields+['','']))
- for f in ['icon.png','atlas_menu.png','atlas_menu.tbl','atlas_game.png','atlas_game.tbl','bg0.png','bg1.png','bg2.png','logo.png','font16.png','font16.tbl']:
+ for f in ['icon.png','atlas_menu.png','atlas_menu.tbl','atlas_game.png','atlas_game.tbl','bgtile0.png','bgtile1.png','bgtile2.png','strip0.png','strip1.png','strip2.png','logo.png','font16.png','font16.tbl']:
   z.write('assets/'+f,f)
  for f in sorted(Path('build/preverified').rglob('*.class')):z.write(f,f.relative_to('build/preverified').as_posix())
 with zipfile.ZipFile(jar) as z2:

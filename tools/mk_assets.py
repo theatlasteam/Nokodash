@@ -125,24 +125,43 @@ for fn, sid in [("Easy_Icon.png_v=26", "face0"), ("Normal_Icon.png_v=26", "face1
                 ("Hard_Icon.png_v=26", "face2"), ("Harder_Icon.png_v=26", "face3")]:
     sprites[sid] = (down(src(fn), 44, 44), (0, 0))
 
-# ground tiles per level: tinted + bright top edge
-def ground(base, tint, edge):
-    im = down(base, G, G)
-    px = im.load()
-    for y in range(G):
-        for x in range(G):
-            r, g, b, a = px[x, y]
-            px[x, y] = (r * tint[0] // 255, g * tint[1] // 255, b * tint[2] // 255, a)
-    d = ImageDraw.Draw(im)
-    d.rectangle([0, 0, G - 1, 1], fill=edge + (255,))
-    return im
-
-gsq = src("White_Ground_Square.png_v=26")
+# level style colors (bg tile tint, ground tint/edge)
 LEVEL_STYLE = [((40, 60, 140), (90, 220, 255)),
                ((70, 40, 120), (240, 130, 250)),
                ((120, 40, 40), (255, 170, 60))]
+
+# wide horizontal ground strips (240x48, single row blit, faint seams)
+def ground_strip(base, tint, edge):
+    im = base.resize((240, 48), Image.LANCZOS)
+    px = im.load()
+    for y in range(48):
+        for x in range(240):
+            r, g, b, a = px[x, y]
+            px[x, y] = (r * tint[0] // 255, g * tint[1] // 255, b * tint[2] // 255, a)
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 239, 2], fill=edge + (255,))
+    for x in range(0, 240, 24):
+        d.line([x, 3, x, 47], fill=(edge[0] // 3, edge[1] // 3, edge[2] // 3, 255))
+    return im
+
+
+gsq = src("White_Ground_Square.png_v=26")
 for i, (tint, edge) in enumerate(LEVEL_STYLE):
-    sprites["ground%d" % i] = (ground(gsq, tint, edge), (0, 0))
+    ground_strip(gsq, tint, edge).save(os.path.join(ASSETS, "strip%d.png" % i),
+                                       optimize=True)
+print("ground strips done")
+
+# big tiled bg: 128px crops of the gray panel asset, tinted per level
+wbg = src("White_Background.png_v=26")
+for i, (tint, edge) in enumerate(LEVEL_STYLE):
+    t = wbg.crop((192, 192, 320, 320)).copy()
+    px = t.load()
+    for y in range(128):
+        for x in range(128):
+            r, g, b, a = px[x, y]
+            px[x, y] = (r * tint[0] // 255, g * tint[1] // 255, b * tint[2] // 255, a)
+    t.save(os.path.join(ASSETS, "bgtile%d.png" % i), optimize=True)
+print("bg tiles done")
 
 # pack (shelf, POT) into per-screen sheets so each screen loads only
 # what it needs: menu sheet (faces + kit preview frames) vs game sheet.
@@ -181,6 +200,8 @@ def pack(sub, width, name):
     print("%s %dx%d, %d sprites" % (name, width, HEIGHT, len(place)))
 
 
+for v in range(1, 5):
+    sprites["cbm%d" % v] = (down(kit_src("kit_cube_%d.png" % v), 12, 12), (6, 6))
 menu_sprites = dict((k, v) for k, v in sprites.items() if k in MENU_IDS)
 game_sprites = dict(sprites)
 
@@ -195,35 +216,7 @@ def pot(v):
 pack(menu_sprites, 128, "atlas_menu")
 pack(game_sprites, 256, "atlas_game")
 
-# per-level backgrounds: gradient + perspective grid + glow sun
-BG_STYLE = [((8, 10, 40), (40, 30, 90), (90, 220, 255)),
-            ((12, 6, 34), (70, 20, 80), (240, 130, 250)),
-            ((30, 8, 10), (90, 30, 20), (255, 170, 60))]
-import random
-for li, (top, bot, glow) in enumerate(BG_STYLE):
-    rnd = random.Random(100 + li)
-    bg = Image.new("RGB", (240, 320))
-    px = bg.load()
-    for yy in range(320):
-        t = yy / 319.0
-        c = tuple(int(top[i] + (bot[i] - top[i]) * t) for i in range(3))
-        for xx in range(240):
-            px[xx, yy] = c
-    d = ImageDraw.Draw(bg, "RGBA")
-    d.ellipse([150, 40, 220, 110], fill=glow)
-    d.ellipse([162, 52, 208, 98], fill=tuple(min(255, c + 60) for c in glow))
-    for r in range(6):  # ground grid glow lines
-        yy = 230 + r * r * 3
-        if yy < 320:
-            d.line([0, yy, 239, yy], fill=glow + (90,), width=1)
-    for i in range(11):
-        d.line([120 + (i - 5) * 14, 230, 120 + (i - 5) * 46, 319], fill=glow + (50,))
-    for _ in range(40):  # stars
-        sx, sy = rnd.randint(0, 239), rnd.randint(0, 200)
-        b = rnd.randint(60, 200)
-        d.point((sx, sy), fill=(b, b, b + 40))
-    bg.save(os.path.join(ASSETS, "bg%d.png" % li), optimize=True)
-print("backgrounds done")
+
 
 # menu logo
 logo = src("logo - NOKoDASH.png")

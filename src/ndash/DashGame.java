@@ -10,6 +10,7 @@ import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.game.GameCanvas;
+import javax.microedition.lcdui.game.Sprite;
 
 /**
  * Nokodash gameplay: cube + ship, orbs/pads/portals, trail particles,
@@ -34,7 +35,8 @@ public final class DashGame extends Game {
     private Levels.Def lv;
 
     private Atlas atlas;
-    private Image bg;
+    private Image bgtile;
+    private Image strip;
     private Camera cam;
     private Particles parts;
     private Trail trail;
@@ -64,7 +66,6 @@ public final class DashGame extends Game {
 
     private int rBlock, rSlab, rSpike, rHspike, rSpikeD, rHspikeD;
     private int rOrbY, rOrbP, rPad, rPorS, rPorC, rPorW;
-    private int rGround;
     private int[][] trailSets = new int[3][];
 
     private boolean ready;
@@ -79,7 +80,8 @@ public final class DashGame extends Game {
             lv = Levels.get(levelIdx);
             atlas = AssetBank.gameAtlas;
             fnt16 = AssetBank.fnt16;
-            bg = AssetBank.bg;
+            bgtile = AssetBank.bgtile;
+            strip = AssetBank.strip;
             Kit.refreshFull(atlas);
             rBlock = atlas.find("block");
             rSlab = atlas.find("slab");
@@ -93,7 +95,6 @@ public final class DashGame extends Game {
             rPorS = atlas.find("por_s");
             rPorC = atlas.find("por_c");
             rPorW = atlas.find("por_w");
-            rGround = atlas.find("ground" + levelIdx);
             trailSets[0] = new int[]{atlas.find("dot_c6"), atlas.find("dot_c4"), atlas.find("dot_c2")};
             trailSets[1] = new int[]{atlas.find("dot_w6"), atlas.find("dot_w4"), atlas.find("dot_w2")};
             trailSets[2] = new int[]{atlas.find("dot_m6"), atlas.find("dot_m4"), atlas.find("dot_m2")};
@@ -466,16 +467,24 @@ public final class DashGame extends Game {
         int camPx = state == PLAY ? wx / 1000 : cam.x;
         int shx = cam.shakeX(simMs);
         int shy = cam.shakeY(simMs);
-        // bg with slow wrap
-        int off = (camPx / 6) % 240;
-        g.drawImage(bg, -off + shx, shy, Graphics.TOP | Graphics.LEFT);
-        g.drawImage(bg, -off + 240 + shx, shy, Graphics.TOP | Graphics.LEFT);
-        // ground strip
-        int gx = -(camPx % G);
-        for (int x = gx; x < 240 + G; x += G) {
-            atlas.draw(g, rGround, x + shx, FLOOR + shy);
-            atlas.draw(g, rGround, x + shx, FLOOR + G + shy);
+        // tiled gray bg, mirror-wrapped for seamlessness, slow parallax
+        int scroll = camPx / 6;
+        int x0 = -(scroll % 256);
+        for (int tx = x0; tx < 240; tx += 128) {
+            int ix = ((tx + scroll + 262144) / 128) & 1;
+            for (int ty = -128; ty < 320; ty += 128) {
+                int iy = (ty / 128) & 1;
+                int tr;
+                if (ix == 0) tr = iy == 0 ? Sprite.TRANS_NONE : Sprite.TRANS_MIRROR_ROT180;
+                else tr = iy == 0 ? Sprite.TRANS_MIRROR : Sprite.TRANS_ROT180;
+                g.drawRegion(bgtile, 0, 0, 128, 128, tr,
+                        tx + shx, ty + shy, Graphics.TOP | Graphics.LEFT);
+            }
         }
+        // one wide ground strip, wrapped (no tile grid)
+        int off = camPx % 240;
+        g.drawImage(strip, -off + shx, FLOOR + shy, Graphics.TOP | Graphics.LEFT);
+        g.drawImage(strip, -off + 240 + shx, FLOOR + shy, Graphics.TOP | Graphics.LEFT);
         // objects
         for (int i = 0; i < lv.n; i++) {
             int t = lv.ot[i];
@@ -521,9 +530,9 @@ public final class DashGame extends Game {
                 int ti = (230 - vy) * 4 / 460;
                 if (ti < 0) ti = 0;
                 if (ti > 4) ti = 4;
-                g.drawImage(Kit.shipFrame(ti), PX + shx - 19, pcy - 11,
+                g.drawImage(Kit.cargoFrame(Kit.cube), PX + shx - 6, pcy - 12,
                         Graphics.TOP | Graphics.LEFT);
-                g.drawImage(Kit.cubeFrame(0), PX + shx - 18, pcy - 18,
+                g.drawImage(Kit.shipFrame(ti), PX + shx - 19, pcy - 11,
                         Graphics.TOP | Graphics.LEFT);
             } else {
                 g.drawImage(Kit.waveFrame(vy < 0 ? 1 : 0), PX + shx - 17, pcy - 13,

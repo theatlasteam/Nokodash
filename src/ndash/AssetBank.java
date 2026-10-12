@@ -15,7 +15,8 @@ public final class AssetBank {
     public static Atlas gameAtlas;
     public static BitmapFont fnt16;
     public static Image logo;
-    public static Image bg;
+    public static Image bgtile;
+    public static Image strip;
 
     public static boolean bootMenu() {
         freeGame();
@@ -45,7 +46,8 @@ public final class AssetBank {
             if (fnt16 == null) {
                 fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");
             }
-            bg = Image.createImage("/bg" + level + ".png");
+            bgtile = Image.createImage("/bgtile" + level + ".png");
+            strip = Image.createImage("/strip" + level + ".png");
             Kit.refreshFull(gameAtlas);
             return true;
         } catch (Throwable t) {
@@ -61,7 +63,8 @@ public final class AssetBank {
 
     public static void freeGame() {
         gameAtlas = null;
-        bg = null;
+        bgtile = null;
+        strip = null;
         System.gc();
     }
 }
