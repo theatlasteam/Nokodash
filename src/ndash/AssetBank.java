@@ -17,6 +17,7 @@ public final class AssetBank {
     public static Image logo;
     public static Image bgtile;
     public static Image strip;
+    public static String lastErr = "";
 
     public static boolean bootMenu() {
         freeGame();
@@ -33,6 +34,7 @@ public final class AssetBank {
             Kit.refreshPrev(menuAtlas);
             return true;
         } catch (Throwable t) {
+            lastErr = shortErr(t);
             return false;
         }
     }
@@ -51,8 +53,15 @@ public final class AssetBank {
             Kit.refreshFull(gameAtlas);
             return true;
         } catch (Throwable t) {
+            lastErr = shortErr(t);
             return false;
         }
+    }
+
+    private static String shortErr(Throwable t) {
+        String m = t == null ? "null" : t.toString();
+        if (m.length() > 64) m = m.substring(0, 64);
+        return m;
     }
 
     public static void freeMenu() {

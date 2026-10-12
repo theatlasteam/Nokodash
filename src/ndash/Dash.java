@@ -21,7 +21,7 @@ public final class Dash extends MIDlet {
             showError("menu data: " + shortMsg(t));
             return;
         }
-        showError("menu data missing");
+        showError("menu:" + AssetBank.lastErr);
     }
 
     private void showError(String msg) {
