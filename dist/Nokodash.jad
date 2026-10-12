@@ -1,8 +1,8 @@
 MIDlet-Name: Nokodash
-MIDlet-Version: 0.3.0
+MIDlet-Version: 0.3.1
 MIDlet-Vendor: Atlas
 MIDlet-1: Nokodash,/icon.png,ndash.Dash
 MicroEdition-Configuration: CLDC-1.1
 MicroEdition-Profile: MIDP-2.0
 MIDlet-Jar-URL: Nokodash.jar
-MIDlet-Jar-Size: 272339
+MIDlet-Jar-Size: 273039

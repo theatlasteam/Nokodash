@@ -75,7 +75,10 @@ public final class DashGame extends Game {
     public boolean boot() {
         try {
             lv = Levels.get(levelIdx);
-            atlas = Atlas.load("/atlas.png", "/atlas.tbl");
+            if (!AssetBank.boot()) return false;
+            atlas = AssetBank.atlas;
+            fnt16 = AssetBank.fnt16;
+            fnt24 = AssetBank.fnt24;
             bg = Image.createImage("/bg" + levelIdx + ".png");
             Kit.refresh(atlas);
             fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");

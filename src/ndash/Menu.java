@@ -29,10 +29,11 @@ public final class Menu extends Canvas {
     public boolean boot() {
         try {
             Save.load();
-            atlas = Atlas.load("/atlas.png", "/atlas.tbl");
-            logo = Image.createImage("/logo.png");
-            fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");
-            fnt24 = BitmapFont.load("/font24.png", "/font24.tbl");
+            if (!AssetBank.boot()) return false;
+            atlas = AssetBank.atlas;
+            logo = AssetBank.logo;
+            fnt16 = AssetBank.fnt16;
+            fnt24 = AssetBank.fnt24;
             rFace0 = atlas.find("face0");
             rFace1 = atlas.find("face1");
             rFace2 = atlas.find("face2");
