@@ -180,7 +180,7 @@ public final class Menu extends Canvas {
                 fnt16.draw(g, "icons + color", 64, y + 22, 0);
             }
         }
-        fnt16.draw(g, "v0.3.2 2/8 move 5 play", 120, 300, 1);
+        fnt16.draw(g, "v0.3.3 2/8 move 5 play", 120, 300, 1);
     }
 
     private void paintKit(Graphics g) {
@@ -203,6 +203,11 @@ public final class Menu extends Canvas {
         g.setColor(0x50dcff);
         g.drawRect(70, 62, 99, 59);
         g.drawImage(img, 120 - iw / 2, 92 - ih / 2, Graphics.TOP | Graphics.LEFT);
+        if (crow == 1) {
+            // ship preview carries the cube inside, like in-game
+            g.drawImage(Kit.prevCube(), 120 - 18, 92 - 18,
+                    Graphics.TOP | Graphics.LEFT);
+        }
         String[] names = {"CUBE", "SHIP", "WAVE", "COLOR", "BACK"};
         for (int i = 0; i < 5; i++) {
             int y = 140 + i * 28;

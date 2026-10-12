@@ -56,6 +56,11 @@ public final class DashGame extends Game {
     private boolean grounded = true;
     private int portalCool;
     private int[] orbCool;
+    private boolean practice;
+    private boolean cpSet;
+    private int cpX, cpY, cpM;
+    private int lastAutoCp;
+    private final int[] scratch = new int[4];
 
     private int rBlock, rSlab, rSpike, rHspike, rSpikeD, rHspikeD;
     private int rOrbY, rOrbP, rPad, rPorS, rPorC, rPorW;
@@ -108,6 +113,8 @@ public final class DashGame extends Game {
 
     private void reset() {
         wx = 0;
+        cpSet = false;
+        lastAutoCp = 0;
         mode = CUBE;
         py = (FLOOR - 12) * 1000;
         vy = 0;
@@ -133,6 +140,21 @@ public final class DashGame extends Game {
         if (state == WIN) {
             stop();
             menu.show();
+            return;
+        }
+        if (keyCode == KEY_NUM7 && state == PLAY) {
+            practice = !practice;
+            if (practice) storeCp();
+            Sfx.click();
+            repaint();
+            return;
+        }
+        if (keyCode == KEY_NUM9 && state == PLAY) {
+            storeCp();
+            int pcx9 = wx / 1000 + PX;
+            parts.burstAnim(pcx9, py / 1000, 6, 100, 350, trailSets[1], simMs);
+            Sfx.click();
+            repaint();
             return;
         }
         if (keyCode == KEY_NUM2 || keyCode == KEY_NUM5 || gameAct(keyCode) == FIRE) {
@@ -198,7 +220,18 @@ public final class DashGame extends Game {
                 state = PLAY;
                 stateT = 0;
                 attempts++;
-                reset();
+                if (practice && cpSet) {
+                    wx = cpX - 24 * 1000;
+                    if (wx < 0) wx = 0;
+                    py = cpY;
+                    mode = cpM;
+                    vy = 0;
+                    portalCool = 600;
+                    lastAutoCp = wx / 1000;
+                    trail.reset();
+                } else {
+                    reset();
+                }
             }
             return;
         }
@@ -235,10 +268,10 @@ public final class DashGame extends Game {
                 angle = (angle + 880 * SIM_DT / 1000) % 360;
             }
         } else if (mode == SHIP) {
-            if (held) vy -= 3400 * SIM_DT / 1000;
-            else vy += 2100 * SIM_DT / 1000;
-            if (vy < -300) vy = -300;
-            if (vy > 300) vy = 300;
+            if (held) vy -= 2600 * SIM_DT / 1000;
+            else vy += 1600 * SIM_DT / 1000;
+            if (vy < -230) vy = -230;
+            if (vy > 230) vy = 230;
             py += vy * SIM_DT;
             if (py < 16 * 1000) {
                 py = 16 * 1000;
@@ -298,33 +331,9 @@ public final class DashGame extends Game {
                     die();
                     return;
                 }
-            } else {
-                int kx = lv.ox[i];
-                int ky = lv.oy[i];
-                int kw = lv.ow[i];
-                int kh = lv.oh[i];
-                if (t == Levels.SPIKE) {
-                    kx += 9;
-                    ky += 8;
-                    kw = 6;
-                    kh = 16;
-                } else if (t == Levels.HSPIKE) {
-                    kx += 9;
-                    ky += 4;
-                    kw = 6;
-                    kh = 8;
-                } else if (t == Levels.SPIKE_D) {
-                    kx += 9;
-                    ky += 2;
-                    kw = 6;
-                    kh = 14;
-                } else {
-                    kx += 9;
-                    ky += 2;
-                    kw = 6;
-                    kh = 8;
-                }
-                if (Rects.overlap(pcx - hw, pcy - hh, hw * 2, hh * 2, kx, ky, kw, kh)) {
+            } else if (spikeRect(t, lv.ox[i], lv.oy[i], lv.ow[i], lv.oh[i], scratch)) {
+                if (Rects.overlap(pcx - hw, pcy - hh, hw * 2, hh * 2,
+                        scratch[0], scratch[1], scratch[2], scratch[3])) {
                     die();
                     return;
                 }
@@ -367,6 +376,19 @@ public final class DashGame extends Game {
             }
         }
 
+        if (practice && wx / 1000 - lastAutoCp >= 400) {
+            int hwA = mode == CUBE ? 11 : mode == SHIP ? 10 : 8;
+            int hhA = mode == CUBE ? 11 : mode == SHIP ? 4 : 6;
+            int pcxA = wx / 1000 + PX;
+            if (!dangerAt(pcxA, pcy, hwA, hhA)) {
+                cpX = wx;
+                cpY = py;
+                cpM = mode;
+                cpSet = true;
+            }
+            lastAutoCp = wx / 1000;
+        }
+
         // trail + win
         int feet = mode == CUBE ? pcy + 11 : mode == SHIP ? pcy + 4 : pcy;
         trail.push(SIM_DT, pcx - 8, feet, 60, 4, 450, simMs);
@@ -374,6 +396,50 @@ public final class DashGame extends Game {
         cam.tick();
         parts.update(SIM_DT);
         if (wx / 1000 >= lv.endX) win();
+    }
+
+    /** Kill rect for spike types into out[4]. False for non-spikes. */
+    private static boolean spikeRect(int t, int ox, int oy, int ow, int oh, int[] out) {
+        if (t == Levels.SPIKE) {
+            out[0] = ox + 9; out[1] = oy + 8; out[2] = 6; out[3] = 16;
+        } else if (t == Levels.HSPIKE) {
+            out[0] = ox + 9; out[1] = oy + 4; out[2] = 6; out[3] = 8;
+        } else if (t == Levels.SPIKE_D) {
+            out[0] = ox + 9; out[1] = oy + 2; out[2] = 6; out[3] = 14;
+        } else if (t == Levels.HSPIKE_D) {
+            out[0] = ox + 9; out[1] = oy + 2; out[2] = 6; out[3] = 8;
+        } else return false;
+        return true;
+    }
+
+    /** True if the box touches anything lethal (checkpoint must be safe). */
+    private boolean dangerAt(int pcx, int pcy, int hw, int hh) {
+        for (int i = 0; i < lv.n; i++) {
+            int t = lv.ot[i];
+            if (t == Levels.BLOCK || t == Levels.SLAB) {
+                if (Rects.overlap(pcx - hw, pcy - hh, hw * 2, hh * 2,
+                        lv.ox[i], lv.oy[i], lv.ow[i], lv.oh[i])) return true;
+            } else if (spikeRect(t, lv.ox[i], lv.oy[i], lv.ow[i], lv.oh[i], scratch)) {
+                if (Rects.overlap(pcx - hw, pcy - hh, hw * 2, hh * 2,
+                        scratch[0], scratch[1], scratch[2], scratch[3])) return true;
+            }
+        }
+        return false;
+    }
+
+    /** Store a checkpoint if the spot is safe; always rearms the timer. */
+    private void storeCp() {
+        int pcx = wx / 1000 + PX;
+        int pcy = py / 1000;
+        int hw = mode == CUBE ? 11 : mode == SHIP ? 10 : 8;
+        int hh = mode == CUBE ? 11 : mode == SHIP ? 4 : 6;
+        if (!dangerAt(pcx, pcy, hw, hh)) {
+            cpX = wx;
+            cpY = py;
+            cpM = mode;
+            cpSet = true;
+        }
+        lastAutoCp = wx / 1000;
     }
 
     private int regionFor(int t) {
@@ -452,10 +518,12 @@ public final class DashGame extends Game {
                 g.drawImage(Kit.cubeFrame(f), PX + shx - 18, pcy - 18,
                         Graphics.TOP | Graphics.LEFT);
             } else if (mode == SHIP) {
-                int ti = (300 - vy) * 4 / 600;
+                int ti = (230 - vy) * 4 / 460;
                 if (ti < 0) ti = 0;
                 if (ti > 4) ti = 4;
                 g.drawImage(Kit.shipFrame(ti), PX + shx - 19, pcy - 11,
+                        Graphics.TOP | Graphics.LEFT);
+                g.drawImage(Kit.cubeFrame(0), PX + shx - 18, pcy - 18,
                         Graphics.TOP | Graphics.LEFT);
             } else {
                 g.drawImage(Kit.waveFrame(vy < 0 ? 1 : 0), PX + shx - 17, pcy - 13,
@@ -470,6 +538,16 @@ public final class DashGame extends Game {
         g.setColor(0x50dcff);
         g.fillRect(70, 20, pct, 4);
         fnt16.draw(g, "TRY " + attempts, 4, 2, 0);
+        if (practice) fnt16.draw(g, "PRAC", 236, 2, 2);
+        if (practice && cpSet) {
+            int mx = cpX / 1000 - camPx + shx;
+            int my = cpY / 1000 + shy;
+            if (mx > -10 && mx < 250) {
+                g.setColor(0x50dcff);
+                g.fillTriangle(mx, my - 7, mx - 5, my, mx + 5, my);
+                g.fillTriangle(mx, my + 7, mx - 5, my, mx + 5, my);
+            }
+        }
         if (state == WIN) {
             int pw = 200;
             int ph = 120;

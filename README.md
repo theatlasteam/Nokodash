@@ -6,8 +6,9 @@ target. Cube + ship modes, orbs, pads, portals, trail particles,
 
 ## Play
 
-2/8 or arrows: menu. FIRE / UP / 2 / 5: jump (tap; cube needs re-taps,
-no hold-repeat). Hold the same keys to fly the ship. 0: mute. *: menu.
+2/8 or arrows: menu. FIRE / UP / 2 / 5: jump (tap, or hold to
+bunny-hop); hold to fly the ship or steer the wave. 0: mute.
+7: practice mode (auto-checkpoints, 9 = manual). *: menu.
 
 ## Tech
 
