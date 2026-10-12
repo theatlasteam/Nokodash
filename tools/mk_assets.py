@@ -36,24 +36,27 @@ def ring(size, color, width=3):
     return im
 
 
-def dot(size, color):
+def dot(size, color, ring=False):
     im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.ellipse([0, 0, size - 1, size - 1], fill=color + (255,))
-    d.ellipse([size // 3, size // 3, size - 1 - size // 3, size - 1 - size // 3],
-              fill=(255, 255, 255, 255))
+    if ring:
+        d.ellipse([0, 0, size - 1, size - 1], outline=color + (255,))
+    else:
+        d.ellipse([0, 0, size - 1, size - 1], fill=color + (255,))
+        d.ellipse([size // 3, size // 3, size - 1 - size // 3, size - 1 - size // 3],
+                  fill=(255, 255, 255, 255))
     return im
 
 
 sprites = {}  # id -> (image, (ax, ay))
 
-# player cube + 8 baked rotations (34px cells, center anchor)
-cube = down(src("Cube_3.png_v=26"), 30, 30)
+# player cube + 8 baked rotations (24px = one grid cell, center anchor)
+cube = down(src("Cube_3.png_v=26"), 24, 24)
 for i in range(8):
     r = cube.rotate(-45 * i, resample=Image.BICUBIC, expand=True)
-    box = Image.new("RGBA", (34, 34), (0, 0, 0, 0))
-    box.alpha_composite(r, ((34 - r.size[0]) // 2, (34 - r.size[1]) // 2))
-    sprites["cube%d" % i] = (box, (17, 17))
+    box = Image.new("RGBA", (36, 36), (0, 0, 0, 0))
+    box.alpha_composite(r, ((36 - r.size[0]) // 2, (36 - r.size[1]) // 2))
+    sprites["cube%d" % i] = (box, (18, 18))
 
 # ship + 5 baked tilts
 ship = src("Ship_166.png_v=26")
@@ -74,6 +77,11 @@ hspike = down(src("Half_Spike.png_v=26"), G, G // 2)
 sprites["hspike"] = (hspike, (0, 0))
 sprites["hspike_d"] = (ImageOps.flip(hspike), (0, 0))
 sprites["pad"] = (down(src("Yellow_Pad.png_v=26"), G, 6), (0, 0))
+# trail dots: 3 shrink stages per color (smallest is a hollow ring = fade)
+for dn, col in [("w", (255, 255, 255)), ("c", (80, 220, 255)), ("m", (240, 120, 250))]:
+    sprites["dot_%s6" % dn] = (dot(6, col), (3, 3))
+    sprites["dot_%s4" % dn] = (dot(4, col), (2, 2))
+    sprites["dot_%s2" % dn] = (dot(3, col, ring=True), (1, 1))
 
 # procedural orbs / portals / trail
 sprites["orb_y"] = (ring(22, (250, 204, 21)), (11, 11))

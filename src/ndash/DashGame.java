@@ -63,7 +63,7 @@ public final class DashGame extends Game {
     private int rBlock, rSlab, rSpike, rHspike, rSpikeD, rHspikeD;
     private int rOrbY, rOrbP, rPad, rPorS, rPorC;
     private int rGround;
-    private int[] trailRegs = new int[3];
+    private int[][] trailSets = new int[3][];
 
     private boolean ready;
 
@@ -92,15 +92,15 @@ public final class DashGame extends Game {
             rPorS = atlas.find("por_s");
             rPorC = atlas.find("por_c");
             rGround = atlas.find("ground" + levelIdx);
-            trailRegs[0] = atlas.find("dot_c");
-            trailRegs[1] = atlas.find("dot_w");
-            trailRegs[2] = atlas.find("dot_m");
+            trailSets[0] = new int[]{atlas.find("dot_c6"), atlas.find("dot_c4"), atlas.find("dot_c2")};
+            trailSets[1] = new int[]{atlas.find("dot_w6"), atlas.find("dot_w4"), atlas.find("dot_w2")};
+            trailSets[2] = new int[]{atlas.find("dot_m6"), atlas.find("dot_m4"), atlas.find("dot_m2")};
             hud = Font.getFont(Font.FACE_SYSTEM, Font.STYLE_PLAIN, Font.SIZE_SMALL);
             big = Font.getFont(Font.FACE_SYSTEM, Font.STYLE_BOLD, Font.SIZE_LARGE);
             cam = new Camera(0, 0, 1 << 20, 0);
             parts = new Particles(96);
             parts.gravity = 700;
-            trail = new Trail(parts, trailRegs, 40);
+            trail = new Trail(parts, trailSets, 40);
             orbCool = new int[lv.n];
             for (int i = 0; i < lv.n; i++) orbCool[i] = -99999;
             reset();
@@ -114,7 +114,7 @@ public final class DashGame extends Game {
     private void reset() {
         wx = 0;
         mode = CUBE;
-        py = (FLOOR - 10) * 1000;
+        py = (FLOOR - 12) * 1000;
         vy = 0;
         angle = 0;
         queueAt = -99999;
@@ -177,8 +177,8 @@ public final class DashGame extends Game {
         }
         int cx = wx / 1000 + PX;
         int cy = py / 1000;
-        parts.burst(cx, cy, 18, 190, 600, trailRegs[1], simMs);
-        parts.burst(cx, cy, 10, 120, 500, trailRegs[2], simMs + 7);
+        parts.burstAnim(cx, cy, 18, 190, 600, trailSets[1], simMs);
+        parts.burstAnim(cx, cy, 10, 120, 500, trailSets[2], simMs + 7);
         Sfx.death();
         cam.shake(12);
     }
@@ -217,7 +217,7 @@ public final class DashGame extends Game {
         wx += stepPx * 1000;
 
         if (mode == CUBE) {
-            boolean grounded = py >= (FLOOR - 10) * 1000;
+            boolean grounded = py >= (FLOOR - 12) * 1000;
             if (tap && grounded) {
                 queueAt = -99999;
                 vy = -580;
@@ -225,12 +225,12 @@ public final class DashGame extends Game {
             }
             vy += 2800 * SIM_DT / 1000;
             py += vy * SIM_DT;
-            if (py >= (FLOOR - 10) * 1000) {
+            if (py >= (FLOOR - 12) * 1000) {
                 if (vy > 900) {
-                    parts.burst(wx / 1000 + PX, FLOOR - 2, 4, 90, 300,
-                            trailRegs[0], simMs);
+                    parts.burstAnim(wx / 1000 + PX, FLOOR - 2, 4, 90, 300,
+                            trailSets[0], simMs);
                 }
-                py = (FLOOR - 10) * 1000;
+                py = (FLOOR - 12) * 1000;
                 vy = 0;
                 angle = ((angle + 45) / 90) * 90 % 360;
             } else {
@@ -250,9 +250,9 @@ public final class DashGame extends Game {
 
         int pcx = wx / 1000 + PX;
         int pcy = py / 1000;
-        int hw = 10;
-        int hh = mode == CUBE ? 10 : 4;
-        int prevBottom = (py - vy * SIM_DT) / 1000 + 10;
+        int hw = mode == CUBE ? 11 : 10;
+        int hh = mode == CUBE ? 11 : 4;
+        int prevBottom = (py - vy * SIM_DT) / 1000 + 11;
 
         // portals first (full-height columns)
         if (portalCool > 0) portalCool -= SIM_DT;
@@ -265,7 +265,7 @@ public final class DashGame extends Game {
                     mode = (mode == CUBE) ? SHIP : CUBE;
                     vy = 0;
                     portalCool = 600;
-                    parts.burst(pcx, pcy, 10, 130, 450, trailRegs[0], simMs);
+                    parts.burstAnim(pcx, pcy, 10, 130, 450, trailSets[0], simMs);
                     Sfx.click();
                 }
             }
@@ -343,7 +343,7 @@ public final class DashGame extends Game {
                     orbCool[i] = (int) simMs;
                     vy = -760;
                     if (mode == SHIP) vy = -560;
-                    parts.burst(ocx, ocy, 6, 110, 350, trailRegs[1], simMs);
+                    parts.burstAnim(ocx, ocy, 6, 110, 350, trailSets[1], simMs);
                     Sfx.click();
                 }
                 continue;
@@ -353,13 +353,14 @@ public final class DashGame extends Game {
                 orbCool[i] = (int) simMs;
                 if (mode == CUBE) vy = (t == Levels.ORB_Y) ? -620 : -800;
                 else vy = (t == Levels.ORB_Y) ? -520 : -650;
-                parts.burst(ocx, ocy, 8, 130, 400, trailRegs[2], simMs + i);
+                parts.burstAnim(ocx, ocy, 8, 130, 400, trailSets[2], simMs + i);
                 Sfx.coin();
             }
         }
 
         // trail + win
-        trail.push(SIM_DT, pcx - 12, pcy, 50, 3, 380, simMs);
+        int feet = mode == CUBE ? pcy + 11 : pcy + 4;
+        trail.push(SIM_DT, pcx - 8, feet, 60, 4, 450, simMs);
         cam.x = wx / 1000;
         cam.tick();
         parts.update(SIM_DT);

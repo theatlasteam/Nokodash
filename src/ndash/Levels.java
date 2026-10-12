@@ -158,14 +158,14 @@ public final class Levels {
         b.spikes(2150, 3);
         b.orbY(2610, 205);
         b.wall(2680, 3);
-        b.stairsDown(2900, 3);
+        b.stairsDown(2704, 3);
         b.pad(3400);
         b.spikes(3460, 3);
         b.spike(3900);
         b.spikes(4150, 2);
         b.spike(4450);
         b.wall(4750, 2);
-        b.wall(4822, 2);
+        b.wall(4950, 2);
         b.orbY(5210, 205);
         b.orbY(5280, 150);
         b.spikes(5200, 5);
@@ -204,7 +204,7 @@ public final class Levels {
         b.portalC(5700, 180);
         b.spikes(6200, 2);
         b.stairsUp(6600, 3);
-        b.stairsDown(6850, 3);
+        b.stairsDown(6672, 3);
         b.orbY(7260, 205);
         b.orbY(7330, 145);
         b.spikes(7250, 5);
@@ -218,7 +218,7 @@ public final class Levels {
         b.portalC(10550, 170);
         b.spikes(11000, 3);
         b.wall(11400, 2);
-        b.wall(11472, 2);
+        b.wall(11600, 2);
         b.orbP(11900, 200);
         b.wall(11960, 3);
         return b.done("Neon Voyage", 1, 270, 12700);
@@ -238,8 +238,7 @@ public final class Levels {
         b.spikes(2550, 6);
         b.plat(3050, 224, 2);
         b.spike(3180);
-        b.stairsUp(3450, 4);
-        b.stairsDown(3750, 4);
+        b.stairsUp(3450, 3);
         b.spikes(4150, 3);
         b.pad(4550);
         b.spikes(4620, 4);
@@ -265,8 +264,7 @@ public final class Levels {
         b.blk(11200, 80, G, 70);
         b.portalC(11900, 170);
         b.wall(12300, 2);
-        b.wall(12372, 2);
-        b.wall(12444, 2);
+        b.wall(12420, 2);
         b.orbP(12910, 205);
         b.spikes(12950, 4);
         b.pad(13600);
