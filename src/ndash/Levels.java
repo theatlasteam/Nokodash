@@ -203,8 +203,7 @@ public final class Levels {
         b.blk(4600, 80, G, 70);
         b.portalC(5700, 180);
         b.spikes(6200, 2);
-        b.stairsUp(6600, 3);
-        b.stairsDown(6672, 3);
+        b.stairsUp(6600, 2);
         b.orbY(7260, 205);
         b.orbY(7330, 145);
         b.spikes(7250, 5);
