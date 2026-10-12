@@ -56,8 +56,9 @@ public final class Kit {
         return Image.createRGBImage(px, w, h, true);
     }
 
-    private static Image region(Atlas atlas, String id) {
+    private static Image region(Atlas atlas, String id) throws Exception {
         int idx = atlas.find(id);
+        if (idx < 0) throw new Exception("no region " + id);
         int w = atlas.table.sw[idx];
         int h = atlas.table.sh[idx];
         return Image.createImage(atlas.sheet(),
@@ -65,12 +66,12 @@ public final class Kit {
     }
 
     /** Rebuild the tinted cache if selection changed. Call on show/boot. */
-    public static void refresh(Atlas atlas) {
+    public static void refresh(Atlas atlas) throws Exception {
         refreshFull(atlas);
     }
 
     /** Full 15-frame cache from the game atlas. */
-    public static void refreshFull(Atlas atlas) {
+    public static void refreshFull(Atlas atlas) throws Exception {
         if (cachedColor == (color & 7) && cachedCube == cube
                 && cachedShip == ship && cachedWave == wave
                 && cache[0] != null) return;
@@ -94,7 +95,7 @@ public final class Kit {
     }
 
     /** 3-frame preview cache from the menu atlas (customizer). */
-    public static void refreshPrev(Atlas atlas) {
+    public static void refreshPrev(Atlas atlas) throws Exception {
         if (prevColor == (color & 7) && prevCube == cube
                 && prevShip == ship && prevWave == wave
                 && prev[0] != null) return;

@@ -22,7 +22,12 @@ public final class AssetBank {
     public static boolean bootMenu() {
         freeGame();
         if (menuAtlas != null) {
-            Kit.refreshPrev(menuAtlas);
+            try {
+                Kit.refreshPrev(menuAtlas);
+            } catch (Throwable t) {
+                lastErr = shortErr(t);
+                return false;
+            }
             return true;
         }
         try {

@@ -172,6 +172,7 @@ for v in range(1, 5):
     MENU_IDS.add("cb%d_0" % v)
     MENU_IDS.add("sh%d_2" % v)
     MENU_IDS.add("wv%d_0" % v)
+    MENU_IDS.add("cbm%d" % v)
 
 
 def pack(sub, width, name):

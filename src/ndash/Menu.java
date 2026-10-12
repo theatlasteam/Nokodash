@@ -57,7 +57,12 @@ public final class Menu extends Canvas {
 
     public void refresh() {
         Save.load();
-        if (ready) Kit.refreshPrev(AssetBank.menuAtlas);
+        if (ready) {
+            try {
+                Kit.refreshPrev(AssetBank.menuAtlas);
+            } catch (Throwable t) {
+            }
+        }
         repaint();
     }
 
@@ -99,7 +104,10 @@ public final class Menu extends Canvas {
                 else if (crow == 1) Kit.ship = (Kit.ship - 1 + d + 4) % 4 + 1;
                 else if (crow == 2) Kit.wave = (Kit.wave - 1 + d + 4) % 4 + 1;
                 else Kit.color = (Kit.color + d + 8) % 8;
-                Kit.refreshPrev(AssetBank.menuAtlas);
+                try {
+                    Kit.refreshPrev(AssetBank.menuAtlas);
+                } catch (Throwable t) {
+                }
                 Save.store();
                 Sfx.click();
                 repaint();
