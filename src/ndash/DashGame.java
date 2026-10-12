@@ -7,7 +7,6 @@ import n2d.Particles;
 import n2d.Rects;
 import n2d.Sfx;
 import javax.microedition.lcdui.Display;
-import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.game.GameCanvas;
@@ -24,6 +23,7 @@ public final class DashGame extends Game {
     private static final int PX = 64;
     private static final int CUBE = 0;
     private static final int SHIP = 1;
+    private static final int WAVE = 2;
     private static final int PLAY = 0;
     private static final int DEAD = 1;
     private static final int WIN = 2;
@@ -39,8 +39,8 @@ public final class DashGame extends Game {
     private Camera cam;
     private Particles parts;
     private Trail trail;
-    private Font hud;
-    private Font big;
+    private BitmapFont fnt16;
+    private BitmapFont fnt24;
 
     private int mode = CUBE;
     private int state = PLAY;
@@ -59,10 +59,8 @@ public final class DashGame extends Game {
     private int portalCool;
     private int[] orbCool;
 
-    private int[] cubeF = new int[8];
-    private int[] shipF = new int[5];
     private int rBlock, rSlab, rSpike, rHspike, rSpikeD, rHspikeD;
-    private int rOrbY, rOrbP, rPad, rPorS, rPorC;
+    private int rOrbY, rOrbP, rPad, rPorS, rPorC, rPorW;
     private int rGround;
     private int[][] trailSets = new int[3][];
 
@@ -79,8 +77,9 @@ public final class DashGame extends Game {
             lv = Levels.get(levelIdx);
             atlas = Atlas.load("/atlas.png", "/atlas.tbl");
             bg = Image.createImage("/bg" + levelIdx + ".png");
-            for (int i = 0; i < 8; i++) cubeF[i] = atlas.find("cube" + i);
-            for (int i = 0; i < 5; i++) shipF[i] = atlas.find("ship" + i);
+            Kit.refresh(atlas);
+            fnt16 = BitmapFont.load("/font16.png", "/font16.tbl");
+            fnt24 = BitmapFont.load("/font24.png", "/font24.tbl");
             rBlock = atlas.find("block");
             rSlab = atlas.find("slab");
             rSpike = atlas.find("spike");
@@ -92,12 +91,11 @@ public final class DashGame extends Game {
             rPad = atlas.find("pad");
             rPorS = atlas.find("por_s");
             rPorC = atlas.find("por_c");
+            rPorW = atlas.find("por_w");
             rGround = atlas.find("ground" + levelIdx);
             trailSets[0] = new int[]{atlas.find("dot_c6"), atlas.find("dot_c4"), atlas.find("dot_c2")};
             trailSets[1] = new int[]{atlas.find("dot_w6"), atlas.find("dot_w4"), atlas.find("dot_w2")};
             trailSets[2] = new int[]{atlas.find("dot_m6"), atlas.find("dot_m4"), atlas.find("dot_m2")};
-            hud = Font.getFont(Font.FACE_SYSTEM, Font.STYLE_PLAIN, Font.SIZE_SMALL);
-            big = Font.getFont(Font.FACE_SYSTEM, Font.STYLE_BOLD, Font.SIZE_LARGE);
             cam = new Camera(0, 0, 1 << 20, 0);
             parts = new Particles(96);
             parts.gravity = 700;
@@ -240,7 +238,7 @@ public final class DashGame extends Game {
             } else {
                 angle = (angle + 880 * SIM_DT / 1000) % 360;
             }
-        } else {
+        } else if (mode == SHIP) {
             if (held) vy -= 3400 * SIM_DT / 1000;
             else vy += 2100 * SIM_DT / 1000;
             if (vy < -300) vy = -300;
@@ -250,23 +248,33 @@ public final class DashGame extends Game {
                 py = 16 * 1000;
                 if (vy < 0) vy = 0;
             }
+        } else {
+            vy = held ? -lv.speed : lv.speed;
+            py += vy * SIM_DT;
+            if (py < 16 * 1000) {
+                py = 16 * 1000;
+                if (vy < 0) vy = 0;
+            }
         }
 
         int pcx = wx / 1000 + PX;
         int pcy = py / 1000;
-        int hw = mode == CUBE ? 11 : 10;
-        int hh = mode == CUBE ? 11 : 4;
+        int hw = mode == CUBE ? 11 : mode == SHIP ? 10 : 8;
+        int hh = mode == CUBE ? 11 : mode == SHIP ? 4 : 6;
         int prevBottom = (py - vy * SIM_DT) / 1000 + 11;
 
         // portals first (full-height columns)
         if (portalCool > 0) portalCool -= SIM_DT;
         for (int i = 0; i < lv.n; i++) {
             int t = lv.ot[i];
-            if (t != Levels.POR_S && t != Levels.POR_C) continue;
+            if (t != Levels.POR_S && t != Levels.POR_C && t != Levels.POR_W) continue;
             if (pcx + hw > lv.ox[i] && pcx - hw < lv.ox[i] + 24 && portalCool <= 0) {
-                if ((t == Levels.POR_S && mode == CUBE)
-                        || (t == Levels.POR_C && mode == SHIP)) {
-                    mode = (mode == CUBE) ? SHIP : CUBE;
+                int nm = mode;
+                if (t == Levels.POR_S && mode != SHIP) nm = SHIP;
+                else if (t == Levels.POR_C && mode != CUBE) nm = CUBE;
+                else if (t == Levels.POR_W && mode != WAVE) nm = WAVE;
+                if (nm != mode) {
+                    mode = nm;
                     vy = 0;
                     portalCool = 600;
                     parts.burstAnim(pcx, pcy, 10, 130, 450, trailSets[0], simMs);
@@ -327,8 +335,8 @@ public final class DashGame extends Game {
             }
         }
 
-        // ship floor is lava
-        if (mode == SHIP && pcy + 4 >= FLOOR) {
+        // ship/wave floor is lava (cube lands via blocks above)
+        if ((mode == SHIP || mode == WAVE) && pcy + hh >= FLOOR) {
             die();
             return;
         }
@@ -364,7 +372,7 @@ public final class DashGame extends Game {
         }
 
         // trail + win
-        int feet = mode == CUBE ? pcy + 11 : pcy + 4;
+        int feet = mode == CUBE ? pcy + 11 : mode == SHIP ? pcy + 4 : pcy;
         trail.push(SIM_DT, pcx - 8, feet, 60, 4, 450, simMs);
         cam.x = wx / 1000;
         cam.tick();
@@ -383,6 +391,7 @@ public final class DashGame extends Game {
         if (t == Levels.ORB_P) return rOrbP;
         if (t == Levels.PAD) return rPad;
         if (t == Levels.POR_S) return rPorS;
+        if (t == Levels.POR_W) return rPorW;
         return rPorC;
     }
 
@@ -444,27 +453,27 @@ public final class DashGame extends Game {
             if (mode == CUBE) {
                 int f = ((angle % 360) + 360) % 360;
                 f = (f + 22) / 45 % 8;
-                atlas.draw(g, cubeF[f], PX + shx, pcy);
-            } else {
+                g.drawImage(Kit.cubeFrame(f), PX + shx - 18, pcy - 18,
+                        Graphics.TOP | Graphics.LEFT);
+            } else if (mode == SHIP) {
                 int ti = (300 - vy) * 4 / 600;
                 if (ti < 0) ti = 0;
                 if (ti > 4) ti = 4;
-                atlas.draw(g, shipF[ti], PX + shx, pcy);
+                g.drawImage(Kit.shipFrame(ti), PX + shx - 19, pcy - 11,
+                        Graphics.TOP | Graphics.LEFT);
+            } else {
+                g.drawImage(Kit.waveFrame(vy < 0 ? 1 : 0), PX + shx - 17, pcy - 13,
+                        Graphics.TOP | Graphics.LEFT);
             }
         }
-        // HUD
-        g.setFont(hud);
-        g.setColor(0xffffff);
+        // HUD in Pusab
         int pct = progress();
-        String ps = pct + "%";
-        g.drawString(ps, 120, 2, Graphics.TOP | Graphics.HCENTER);
+        fnt16.draw(g, pct + "%", 120, 2, 1);
         g.setColor(0x3a3f5a);
-        g.fillRect(70, 16, 100, 4);
+        g.fillRect(70, 20, 100, 4);
         g.setColor(0x50dcff);
-        g.fillRect(70, 16, pct, 4);
-        g.setFont(hud);
-        g.setColor(0xffffff);
-        g.drawString("TRY " + attempts, 4, 2, Graphics.TOP | Graphics.LEFT);
+        g.fillRect(70, 20, pct, 4);
+        fnt16.draw(g, "TRY " + attempts, 4, 2, 0);
         if (state == WIN) {
             int pw = 200;
             int ph = 120;
@@ -474,15 +483,11 @@ public final class DashGame extends Game {
             g.fillRect(px, py2, pw, ph);
             g.setColor(0x50dcff);
             g.drawRect(px, py2, pw - 1, ph - 1);
-            g.setFont(big);
-            g.drawString("COMPLETE!", 120, py2 + 10, Graphics.TOP | Graphics.HCENTER);
-            g.setFont(hud);
-            g.drawString(lv.name, 120, py2 + 40, Graphics.TOP | Graphics.HCENTER);
-            g.drawString("jumps " + jumps + "  tries " + attempts, 120, py2 + 60,
-                    Graphics.TOP | Graphics.HCENTER);
-            g.drawString("best " + Save.best[levelIdx] + "%", 120, py2 + 78,
-                    Graphics.TOP | Graphics.HCENTER);
-            g.drawString("FIRE: levels", 120, py2 + 96, Graphics.TOP | Graphics.HCENTER);
+            fnt24.draw(g, "COMPLETE!", 120, py2 + 8, 1);
+            fnt16.draw(g, lv.name.toUpperCase(), 120, py2 + 44, 1);
+            fnt16.draw(g, "jumps " + jumps + " tries " + attempts, 120, py2 + 64, 1);
+            fnt16.draw(g, "best " + Save.best[levelIdx] + "%", 120, py2 + 82, 1);
+            fnt16.draw(g, "FIRE: levels", 120, py2 + 100, 1);
         }
     }
 }

@@ -18,6 +18,7 @@ public final class Levels {
     public static final int PAD = 9;
     public static final int POR_S = 10;
     public static final int POR_C = 11;
+    public static final int POR_W = 12;
 
     public static final int G = 24;
     public static final int FLOOR = 272;
@@ -133,6 +134,17 @@ public final class Levels {
             ow[n - 1] = yMid;
         }
 
+        void portalW(int x, int yMid) {
+            add(POR_W, x, 0, G, 320);
+            ow[n - 1] = yMid;
+        }
+
+        void waveHall(int x, int len, int ceilTop) {
+            // enclosed wave hall: block floor + ceiling, 24px grid
+            blk(x, FLOOR - G, len, G);
+            blk(x, ceilTop, len, G);
+        }
+
         Def done(String name, int face, int speed, int endX) {
             Def d = new Def();
             d.name = name;
@@ -233,7 +245,12 @@ public final class Levels {
         b.wall(11600, 2);
         b.orbP(11900, 200);
         b.wall(11960, 3);
-        return b.done("Neon Voyage", 1, 270, 12700);
+        b.portalW(12180, 170);
+        b.waveHall(12180, 1000, 88);
+        b.blk(12450, 200, 72, 48);
+        b.blk(12800, 112, 96, 24);
+        b.portalC(13220, 170);
+        return b.done("Neon Voyage", 1, 270, 13600);
     }
 
     private static Def level3() {
@@ -278,11 +295,16 @@ public final class Levels {
         b.portalC(11900, 170);
         b.wall(12300, 2);
         b.wall(12420, 2);
-        b.orbP(12910, 205);
-        b.spikes(12950, 4);
-        b.pad(13600);
-        b.spikes(13670, 4);
-        b.spikes(14100, 3);
-        return b.done("Spike Storm", 2, 290, 14800);
+        b.portalW(12700, 170);
+        b.waveHall(12700, 1200, 104);
+        b.blk(13200, 128, 24, 60);
+        b.blk(13700, 128, 24, 60);
+        b.portalC(13950, 170);
+        b.orbP(14210, 205);
+        b.spikes(14250, 4);
+        b.pad(14900);
+        b.spikes(14970, 4);
+        b.spikes(15400, 3);
+        return b.done("Spike Storm", 2, 290, 16100);
     }
 }

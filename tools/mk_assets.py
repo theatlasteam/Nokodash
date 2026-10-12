@@ -50,22 +50,48 @@ def dot(size, color, ring=False):
 
 sprites = {}  # id -> (image, (ax, ay))
 
-# player cube + 8 baked rotations (24px = one grid cell, center anchor)
-cube = down(src("Cube_3.png_v=26"), 24, 24)
-for i in range(8):
-    r = cube.rotate(-45 * i, resample=Image.BICUBIC, expand=True)
-    box = Image.new("RGBA", (36, 36), (0, 0, 0, 0))
-    box.alpha_composite(r, ((36 - r.size[0]) // 2, (36 - r.size[1]) // 2))
-    sprites["cube%d" % i] = (box, (18, 18))
+# --- customizable kit: REAL GD icons from the iconkit premades
+# (art/kit_*.png), grayscale-friendly for runtime tinting.
+# Cubes: 24px + 8 baked rotations. Ships: fit 36x14 + 5 tilts.
+# Waves: fit 30x22 + 2 tilts.
+def kit_src(name):
+    p = os.path.join(ART, name)
+    return Image.open(p).convert("RGBA")
 
-# ship + 5 baked tilts
-ship = src("Ship_166.png_v=26")
-ship = ship.resize((34, 10), Image.LANCZOS)
-for i, ang in enumerate([-24, -12, 0, 12, 24]):
-    r = ship.rotate(ang, resample=Image.BICUBIC, expand=True)
-    box = Image.new("RGBA", (38, 22), (0, 0, 0, 0))
-    box.alpha_composite(r, ((38 - r.size[0]) // 2, (22 - r.size[1]) // 2))
-    sprites["ship%d" % i] = (box, (19, 11))
+
+def bake_rot(im, cell, anchor):
+    out = []
+    for i in range(8):
+        r = im.rotate(-45 * i, resample=Image.BICUBIC, expand=True)
+        box = Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+        box.alpha_composite(r, ((cell - r.size[0]) // 2, (cell - r.size[1]) // 2))
+        out.append((box, anchor))
+    return out
+
+
+def bake_tilt(im, n, cellw, cellh, anchor, angs):
+    out = []
+    for ang in angs:
+        r = im.rotate(ang, resample=Image.BICUBIC, expand=True)
+        box = Image.new("RGBA", (cellw, cellh), (0, 0, 0, 0))
+        box.alpha_composite(r, ((cellw - r.size[0]) // 2, (cellh - r.size[1]) // 2))
+        out.append((box, anchor))
+    return out
+
+
+for v in range(1, 5):
+    cb = down(kit_src("kit_cube_%d.png" % v), 24, 24)
+    for i, (im, an) in enumerate(bake_rot(cb, 36, (18, 18))):
+        sprites["cb%d_%d" % (v, i)] = (im, an)
+    sh = kit_src("kit_ship_%d.png" % v)
+    sh.thumbnail((36, 14), Image.LANCZOS)
+    for i, (im, an) in enumerate(bake_tilt(sh, 5, 38, 22, (19, 11),
+                                           [-24, -12, 0, 12, 24])):
+        sprites["sh%d_%d" % (v, i)] = (im, an)
+    wv = kit_src("kit_wave_%d.png" % v)
+    wv.thumbnail((30, 22), Image.LANCZOS)
+    for i, (im, an) in enumerate(bake_tilt(wv, 2, 34, 26, (17, 13), [-18, 18])):
+        sprites["wv%d_%d" % (v, i)] = (im, an)
 
 # blocks & hazards
 sprites["block"] = (down(src("Block.webp_v=26"), G, G), (0, 0))
@@ -88,6 +114,7 @@ sprites["orb_y"] = (ring(22, (250, 204, 21)), (11, 11))
 sprites["orb_p"] = (ring(22, (240, 120, 250)), (11, 11))
 sprites["por_s"] = (ring(40, (80, 200, 255), width=5), (20, 20))
 sprites["por_c"] = (ring(40, (255, 160, 40), width=5), (20, 20))
+sprites["por_w"] = (ring(40, (255, 90, 220), width=5), (20, 20))
 sprites["dot_w"] = (dot(6, (255, 255, 255)), (3, 3))
 sprites["dot_c"] = (dot(6, (80, 220, 255)), (3, 3))
 sprites["dot_m"] = (dot(6, (240, 120, 250)), (3, 3))
