@@ -152,7 +152,7 @@ public final class Levels {
         B b = new B();
         b.spike(600);
         b.spikes(900, 2);
-        b.stairsUp(1200, 3);
+        b.wall(1200, 2);
         b.spike(1560);
         b.wall(1850, 2);
         b.spikes(2150, 3);
@@ -170,7 +170,7 @@ public final class Levels {
         b.orbY(5280, 150);
         b.spikes(5200, 5);
         b.hspike(5050);
-        b.stairsUp(5700, 3);
+        b.plat(5700, 224, 3);
         b.spike(6160);
         b.spikes(6450, 3);
         b.orbY(6750, 205);
@@ -190,7 +190,7 @@ public final class Levels {
         B b = new B();
         b.spike(600);
         b.spikes(950, 2);
-        b.stairsUp(1300, 3);
+        b.wall(1300, 2);
         b.wall(1750, 2);
         b.spikes(2050, 2);
         b.orbY(2355, 205);
@@ -227,7 +227,7 @@ public final class Levels {
         B b = new B();
         b.spikes(550, 2);
         b.spikes(900, 3);
-        b.stairsUp(1250, 3);
+        b.wall(1250, 2);
         b.spike(1520);
         b.wall(1800, 2);
         b.wall(1872, 2);
@@ -237,7 +237,7 @@ public final class Levels {
         b.spikes(2550, 6);
         b.plat(3050, 224, 2);
         b.spike(3180);
-        b.stairsUp(3450, 3);
+        b.plat(3450, 224, 2);
         b.spikes(4150, 3);
         b.pad(4550);
         b.spikes(4620, 4);

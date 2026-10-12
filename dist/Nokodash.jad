@@ -5,4 +5,4 @@ MIDlet-1: Nokodash,/icon.png,ndash.Dash
 MicroEdition-Configuration: CLDC-1.1
 MicroEdition-Profile: MIDP-2.0
 MIDlet-Jar-URL: Nokodash.jar
-MIDlet-Jar-Size: 95891
+MIDlet-Jar-Size: 95888
