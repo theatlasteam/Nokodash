@@ -55,6 +55,7 @@ public final class DashGame extends Game {
     private boolean numHeld;
     private int attempts = 1;
     private int jumps;
+    private boolean grounded = true;
     private int portalCool;
     private int[] orbCool;
 
@@ -116,6 +117,7 @@ public final class DashGame extends Game {
         mode = CUBE;
         py = (FLOOR - 12) * 1000;
         vy = 0;
+        grounded = true;
         angle = 0;
         queueAt = -99999;
         keyTap = false;
@@ -217,14 +219,15 @@ public final class DashGame extends Game {
         wx += stepPx * 1000;
 
         if (mode == CUBE) {
-            boolean grounded = py >= (FLOOR - 12) * 1000;
             if ((tap || held) && grounded) {
                 queueAt = -99999;
                 vy = -580;
+                grounded = false;
                 Sfx.jump();
             }
             vy += 2800 * SIM_DT / 1000;
             py += vy * SIM_DT;
+            grounded = false;
             if (py >= (FLOOR - 12) * 1000) {
                 if (vy > 900) {
                     parts.burstAnim(wx / 1000 + PX, FLOOR - 2, 4, 90, 300,
@@ -232,6 +235,7 @@ public final class DashGame extends Game {
                 }
                 py = (FLOOR - 12) * 1000;
                 vy = 0;
+                grounded = true;
                 angle = ((angle + 45) / 90) * 90 % 360;
             } else {
                 angle = (angle + 880 * SIM_DT / 1000) % 360;
@@ -282,8 +286,9 @@ public final class DashGame extends Game {
                 if (!Rects.overlap(pcx - hw, pcy - hh, hw * 2, hh * 2,
                         lv.ox[i], lv.oy[i], lv.ow[i], lv.oh[i])) continue;
                 if (mode == CUBE && vy > 0 && prevBottom <= lv.oy[i] + 8) {
-                    py = (lv.oy[i] - 10) * 1000;
+                    py = (lv.oy[i] - 12) * 1000;
                     vy = 0;
+                    grounded = true;
                     angle = ((angle + 45) / 90) * 90 % 360;
                 } else {
                     die();

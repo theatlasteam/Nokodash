@@ -1,4 +1,4 @@
-# Nokodash 0.1.0
+# Nokodash 0.2.0
 
 Geometry Dash fan game for Java ME (CLDC 1.1 / MIDP 2.0), Nokia 6300
 target. Cube + ship modes, orbs, pads, portals, trail particles,

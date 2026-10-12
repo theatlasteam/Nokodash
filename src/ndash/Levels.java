@@ -89,6 +89,17 @@ public final class Levels {
             blk(x, y, cells * G, G);
         }
 
+        /** Long platform with spikes on top. spikeCells = 0-based cells
+         * carrying a spike; keep >= 2 spike-free cells between groups
+         * so there is always room to land. */
+        void spikeTop(int x, int y, int cells, int[] spikeCells) {
+            blk(x, y, cells * G, G);
+            for (int i = 0; i < spikeCells.length; i++) {
+                int sx = x + spikeCells[i] * G;
+                add(SPIKE, sx, y - G, G, G);
+            }
+        }
+
         void orbY(int x, int y) {
             add(ORB_Y, x - 11, y - 11, 22, 22);
         }
@@ -183,6 +194,7 @@ public final class Levels {
         b.spike(8200);
         b.pad(8440);
         b.spikes(8500, 3);
+        b.spikeTop(8800, 224, 8, new int[]{3, 4});
         return b.done("Stereo Sprint", 0, 250, 9200);
     }
 
@@ -207,6 +219,7 @@ public final class Levels {
         b.orbY(7260, 205);
         b.orbY(7330, 145);
         b.spikes(7250, 5);
+        b.spikeTop(7400, 224, 10, new int[]{2, 3, 6, 7});
         b.wall(7700, 2);
         b.pad(8100);
         b.spikes(8170, 3);
@@ -256,6 +269,7 @@ public final class Levels {
         b.wall(8680, 3);
         b.spikes(9100, 2);
         b.spikes(9400, 3);
+        b.spikeTop(9550, 224, 10, new int[]{2, 3, 6, 7});
         b.portalS(9900, 170);
         b.spikes(10050, 70);
         b.ceilRow(10000, 1750, 56);
