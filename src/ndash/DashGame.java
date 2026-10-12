@@ -459,6 +459,21 @@ public final class DashGame extends Game {
     }
 
     protected void render(Graphics g) {
+        try {
+            renderInner(g);
+        } catch (Throwable t) {
+            g.setColor(0x550000);
+            g.fillRect(0, 0, 240, 320);
+            if (fnt16 != null) {
+                fnt16.draw(g, "GAME ERR", 120, 130, 1);
+                String m = t.toString();
+                if (m.length() > 30) m = m.substring(0, 30);
+                fnt16.draw(g, m, 120, 155, 1);
+            }
+        }
+    }
+
+    private void renderInner(Graphics g) {
         if (!ready) {
             g.setColor(0x05060f);
             g.fillRect(0, 0, getWidth(), getHeight());

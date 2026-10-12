@@ -4,6 +4,7 @@ import n2d.Atlas;
 import n2d.Sfx;
 import javax.microedition.lcdui.Canvas;
 import javax.microedition.lcdui.Display;
+import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 
@@ -138,6 +139,8 @@ public final class Menu extends Canvas {
     }
 
     private void launch(int idx) {
+        // boot fully BEFORE switching screens: no black flash, and a
+        // failed boot never strands us on an empty canvas.
         if (!AssetBank.bootGame(idx)) {
             AssetBank.bootMenu();
             syncBank();
@@ -145,14 +148,34 @@ public final class Menu extends Canvas {
             return;
         }
         DashGame g = new DashGame(display, this, idx);
-        display.setCurrent(g);
-        if (g.boot()) g.start();
-        else show();
+        if (g.boot()) {
+            display.setCurrent(g);
+            g.start();
+        } else {
+            AssetBank.bootMenu();
+            syncBank();
+            repaint();
+        }
     }
 
     protected void paint(Graphics g) {
         g.setColor(0x05060f);
         g.fillRect(0, 0, 240, 320);
+        try {
+            paintInner(g);
+        } catch (Throwable t) {
+            g.setColor(0x550000);
+            g.fillRect(0, 0, 240, 320);
+            g.setColor(0xffffff);
+            g.setFont(Font.getFont(Font.FACE_SYSTEM, Font.STYLE_PLAIN, Font.SIZE_SMALL));
+            String m = t.toString();
+            if (m.length() > 60) m = m.substring(0, 60);
+            g.drawString("MENU ERR", 120, 100, Graphics.TOP | Graphics.HCENTER);
+            g.drawString(m, 120, 130, Graphics.TOP | Graphics.HCENTER);
+        }
+    }
+
+    private void paintInner(Graphics g) {
         if (!ready) return;
         if (customizing) {
             paintKit(g);
@@ -180,7 +203,7 @@ public final class Menu extends Canvas {
                 fnt16.draw(g, "icons + color", 64, y + 22, 0);
             }
         }
-        fnt16.draw(g, "v0.3.4 2/8 move 5 play", 120, 300, 1);
+        fnt16.draw(g, "v0.3.5 2/8 move 5 play", 120, 300, 1);
     }
 
     private void paintKit(Graphics g) {

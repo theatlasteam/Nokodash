@@ -8,7 +8,7 @@ java -jar ../lib/proguard.jar -injars build/classes -outjars build/preverified -
 python3 - <<'PY'
 from pathlib import Path
 import zipfile
-fields=['MIDlet-Name: Nokodash','MIDlet-Version: 0.3.4','MIDlet-Vendor: Atlas','MIDlet-1: Nokodash,/icon.png,ndash.Dash','MicroEdition-Configuration: CLDC-1.1','MicroEdition-Profile: MIDP-2.0']
+fields=['MIDlet-Name: Nokodash','MIDlet-Version: 0.3.5','MIDlet-Vendor: Atlas','MIDlet-1: Nokodash,/icon.png,ndash.Dash','MicroEdition-Configuration: CLDC-1.1','MicroEdition-Profile: MIDP-2.0']
 jar=Path('dist/Nokodash.jar')
 with zipfile.ZipFile(jar,'w',zipfile.ZIP_DEFLATED) as z:
  z.writestr('META-INF/MANIFEST.MF','\r\n'.join(['Manifest-Version: 1.0']+fields+['','']))
