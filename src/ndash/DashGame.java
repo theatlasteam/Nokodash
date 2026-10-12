@@ -218,7 +218,7 @@ public final class DashGame extends Game {
 
         if (mode == CUBE) {
             boolean grounded = py >= (FLOOR - 12) * 1000;
-            if (tap && grounded) {
+            if ((tap || held) && grounded) {
                 queueAt = -99999;
                 vy = -580;
                 Sfx.jump();
@@ -348,7 +348,7 @@ public final class DashGame extends Game {
                 }
                 continue;
             }
-            if (dx < 24 && dy < 24 && tap && simMs - orbCool[i] > 300) {
+            if (dx < 24 && dy < 24 && (tap || held) && simMs - orbCool[i] > 300) {
                 queueAt = -99999;
                 orbCool[i] = (int) simMs;
                 if (mode == CUBE) vy = (t == Levels.ORB_Y) ? -620 : -800;
